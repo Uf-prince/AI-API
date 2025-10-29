@@ -1,43 +1,48 @@
-const express = require("express");
-const axios = require("axios");
-const config = require("./config");
+import express from "express";
+import bodyParser from "body-parser";
+import dotenv from "dotenv";
+import fetch from "node-fetch";
+
+dotenv.config();
 
 const app = express();
-app.use(express.json());
+app.use(bodyParser.json());
 
-// Simple health
-app.get('/', (req, res) => res.send('✅ AI API running. Use POST /api/ask'));
+const PORT = process.env.PORT || 3000;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// Main endpoint for bot
-app.post('/api/ask', async (req, res) => {
-  const prompt = (req.body && req.body.prompt) || '';
-  if (!prompt) return res.status(400).json({ success: false, error: 'prompt is required in JSON body' });
+// ✅ Root endpoint check
+app.get("/", (req, res) => {
+  res.send("✅ AI API Server is Running!");
+});
+
+// ✅ Main AI route
+app.get("/api/ask", async (req, res) => {
+  const query = req.query.q;
+  if (!query) return res.status(400).json({ error: "Missing query parameter 'q'" });
+  if (!OPENAI_API_KEY) return res.status(500).json({ error: "API key not configured" });
 
   try {
-    const response = await axios.post(
-      (config.AI_API_URL || 'https://api.openai.com/v1/chat/completions'),
-      {
-        model: config.AI_MODEL || 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: config.AI_MAX_TOKENS || 500
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${config.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: config.AI_TIMEOUT || 15000
-      }
-    );
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: query }],
+      }),
+    });
 
-    const reply = response.data?.choices?.[0]?.message?.content || response.data?.choices?.[0]?.text || JSON.stringify(response.data).slice(0,200);
-    res.json({ success: true, reply });
-  } catch (err) {
-    console.error('OpenAI Error:', err && err.toString());
-    const message = err.response?.data?.error?.message || err.message || 'Unknown error';
-    res.status(500).json({ success: false, error: message });
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "No response from AI";
+
+    res.json({ reply });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to connect to OpenAI" });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
