@@ -1,0 +1,24 @@
+{
+  "name": "ai-server",
+  "description": "Deploy-ready OpenAI proxy for WhatsApp bot",
+  "repository": "",
+  "env": {
+    "OPENAI_API_KEY": {
+      "description": "Your OpenAI API key (sk-...)",
+      "required": true
+    },
+    "AI_MODEL": {
+      "description": "(optional) OpenAI model to use, e.g. gpt-4o-mini",
+      "value": "gpt-4o-mini"
+    },
+    "AI_API_URL": {
+      "description": "(optional) override OpenAI API URL",
+      "value": "https://api.openai.com/v1/chat/completions"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  }
+}
