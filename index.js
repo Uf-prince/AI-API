@@ -1,53 +1,44 @@
-// index.js
 import express from "express";
-import fetch from "node-fetch";
 import dotenv from "dotenv";
+import axios from "axios";
 
 dotenv.config();
-
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Body parser
 app.use(express.json());
 
-// Root endpoint
+// Health check
 app.get("/", (req, res) => {
   res.send("AI Server is running!");
 });
 
-// AI ask endpoint
+// GET request endpoint for browser
 app.get("/api/ask", async (req, res) => {
-  const query = req.query.q;
-
-  if (!query) {
-    return res.status(400).json({ error: "Query parameter 'q' is required" });
-  }
+  const question = req.query.q;
+  if (!question) return res.status(400).json({ error: "Query parameter 'q' is required." });
 
   try {
-    const response = await fetch("https://api.openai.com/v1/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-4",
+        messages: [{ role: "user", content: question }],
       },
-      body: JSON.stringify({
-        model: "text-davinci-003",
-        prompt: query,
-        max_tokens: 150
-      })
-    });
+      {
+        headers: {
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    const data = await response.json();
-    res.json(data);
-
-  } catch (error) {
-    console.error("Error fetching from OpenAI:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.json({ answer: response.data.choices[0].message.content });
+  } catch (err) {
+    res.status(500).json({ error: err.response?.data || err.message });
   }
 });
 
-// Start server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`AI Server running at http://localhost:${port}`);
 });
