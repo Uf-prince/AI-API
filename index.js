@@ -1,48 +1,53 @@
+// index.js
 import express from "express";
-import bodyParser from "body-parser";
-import dotenv from "dotenv";
 import fetch from "node-fetch";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 const app = express();
-app.use(bodyParser.json());
+const port = process.env.PORT || 3000;
 
-const PORT = process.env.PORT || 3000;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// Body parser
+app.use(express.json());
 
-// ✅ Root endpoint check
+// Root endpoint
 app.get("/", (req, res) => {
-  res.send("✅ AI API Server is Running!");
+  res.send("AI Server is running!");
 });
 
-// ✅ Main AI route
+// AI ask endpoint
 app.get("/api/ask", async (req, res) => {
   const query = req.query.q;
-  if (!query) return res.status(400).json({ error: "Missing query parameter 'q'" });
-  if (!OPENAI_API_KEY) return res.status(500).json({ error: "API key not configured" });
+
+  if (!query) {
+    return res.status(400).json({ error: "Query parameter 'q' is required" });
+  }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: query }],
-      }),
+        model: "text-davinci-003",
+        prompt: query,
+        max_tokens: 150
+      })
     });
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || "No response from AI";
+    res.json(data);
 
-    res.json({ reply });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to connect to OpenAI" });
+    console.error("Error fetching from OpenAI:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
