@@ -1,14 +1,17 @@
-import express from "express";
-import fetch from "node-fetch";
+const express = require("express");
+const fetch = require("node-fetch");
+const config = require("./config");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 👉 YAHAN APNA NAYA TOKEN DALO
-const HF_TOKEN = "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";
+// startup check
+if (!config.HF_TOKEN) {
+  console.error("❌ HF_TOKEN missing in environment variables");
+}
 
 app.get("/", (req, res) => {
-  res.send("✅ Free HuggingFace AI running!");
+  res.send("✅ HuggingFace AI server running!");
 });
 
 app.get("/api/ask", async (req, res) => {
@@ -17,14 +20,15 @@ app.get("/api/ask", async (req, res) => {
     if (!q) return res.json({ error: "Missing question" });
 
     const response = await fetch(
-      "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
+      `https://api-inference.huggingface.co/models/${config.HF_MODEL}`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${HF_TOKEN}`,
+          Authorization: `Bearer ${config.HF_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ inputs: q }),
+        timeout: config.AI_TIMEOUT,
       }
     );
 
@@ -38,11 +42,11 @@ app.get("/api/ask", async (req, res) => {
     res.json({ reply });
 
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.json({ error: "Server error" });
   }
 });
 
 app.listen(PORT, () =>
-  console.log(`🚀 HuggingFace bot running on port ${PORT}`)
+  console.log(`🚀 Server running on port ${PORT}`)
 );
