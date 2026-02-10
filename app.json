@@ -1,19 +1,19 @@
 {
-  "name": "ai-server",
-  "description": "Deploy-ready OpenAI proxy for WhatsApp bot",
+  "name": "hf-ai-server",
+  "description": "Deploy-ready HuggingFace AI proxy",
   "repository": "",
   "env": {
-    "OPENAI_API_KEY": {
-      "description": "Your OpenAI API key (sk-...)",
+    "HF_TOKEN": {
+      "description": "Your HuggingFace API token (hf_...)",
       "required": true
     },
-    "AI_MODEL": {
-      "description": "(optional) OpenAI model to use, e.g. gpt-4o-mini",
-      "value": "gpt-4o-mini"
+    "HF_MODEL": {
+      "description": "(optional) HuggingFace model name",
+      "value": "microsoft/DialoGPT-medium"
     },
-    "AI_API_URL": {
-      "description": "(optional) override OpenAI API URL",
-      "value": "https://api.openai.com/v1/chat/completions"
+    "AI_TIMEOUT": {
+      "description": "(optional) request timeout in ms",
+      "value": "30000"
     }
   },
   "formation": {
