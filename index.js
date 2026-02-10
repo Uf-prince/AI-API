@@ -1,17 +1,16 @@
-const express = require("express");
-const fetch = require("node-fetch");
-const config = require("./config");
+import express from "express";
+import fetch from "node-fetch";
+import config from "./config.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// startup check
 if (!config.HF_TOKEN) {
-  console.error("❌ HF_TOKEN missing in environment variables");
+  console.error("❌ HF_TOKEN missing");
 }
 
 app.get("/", (req, res) => {
-  res.send("✅ HuggingFace AI server running!");
+  res.send("✅ HuggingFace AI running!");
 });
 
 app.get("/api/ask", async (req, res) => {
@@ -34,7 +33,7 @@ app.get("/api/ask", async (req, res) => {
 
     const data = await response.json();
 
-    let reply =
+    const reply =
       data?.generated_text ||
       data?.[0]?.generated_text ||
       "No response";
@@ -48,5 +47,5 @@ app.get("/api/ask", async (req, res) => {
 });
 
 app.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
+  console.log(`🚀 Server running on ${PORT}`)
 );
