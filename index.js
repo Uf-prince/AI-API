@@ -33,11 +33,17 @@ app.get("/api/ask", async (req, res) => {
 
     const data = await response.json();
 
-    const reply =
-      data?.generated_text ||
-      data?.[0]?.generated_text ||
-      "No response";
+  let reply = "No response";
 
+if (Array.isArray(data) && data[0]?.generated_text) {
+  reply = data[0].generated_text;
+} else if (data?.generated_text) {
+  reply = data.generated_text;
+} else if (data?.error) {
+  reply = "HF error: " + data.error;
+}
+
+console.log("HF RAW:", data);
     res.json({ reply });
 
   } catch (err) {
